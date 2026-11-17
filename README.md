@@ -43,7 +43,7 @@ Mudanças nas variáveis exigem novo deploy. `/api/health` informa o provedor e 
 
 Documentação: https://firebotbr.com/integracoes/docs (requer login).
 
-1. Autenticação: `GET https://firebotbr.com/api/v1/auth`, com `x-api-key` apenas no servidor.
+1. Autenticação validada por `GET https://firebotbr.com/api/v1/account`, com `x-api-key` apenas no servidor. A rota `/auth` exibida na documentação retornou 404 na verificação real; `/account` é a consulta de conta documentada. Os dados cadastrais retornados não são persistidos nem enviados ao navegador.
 2. Criação: `POST /api/v1/pix/create`, com `amount: 297` em **reais**, `productType: DIGITAL`, descrição com referência interna, `storeUrl`, nome, e-mail, CPF e telefone com DDD obrigatórios. O servidor fixa o valor; o navegador não escolhe o preço.
 3. A resposta precisa trazer `transactionId`, `amount`, `status` e `pixCopiaECola`. O QR Code é gerado a partir do mesmo EMV exibido no botão Copia e Cola. Não há código pagável fictício em produção.
 4. Consulta: `GET /api/v1/pix/{transactionId}`, autenticada. Antes de aprovar, o servidor exige o mesmo identificador, valor exato de R$ 297 e status `PAID`. O navegador consulta a cada dez segundos; o servidor reaproveita resultados por quinze segundos.

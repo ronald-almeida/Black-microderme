@@ -15,7 +15,7 @@ test('Firebot sends private key only to the official server and caches readiness
   } });
   await gateway.prepare(); await gateway.prepare();
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, 'https://firebotbr.com/api/v1/auth');
+  assert.equal(calls[0].url, 'https://firebotbr.com/api/v1/account');
   assert.equal(calls[0].options.headers['x-api-key'], testEnv.FIREBOT_API_KEY);
   assert.equal(calls[0].options.redirect, 'error');
   assert.ok(!JSON.stringify([...store.records]).includes(testEnv.FIREBOT_API_KEY));
@@ -40,7 +40,7 @@ test('Firebot uses reais, DIGITAL product, HTTPS store URL and documented buyer 
   assert.equal(result.pix.emv, tx.pixCopiaECola);
 });
 
-test('Firebot status normalizes documented uppercase states and verifies amount and ID', async () => {
+test('Firebot status normalizes supported uppercase states and verifies amount and ID', async () => {
   const statuses = { PENDING: 'pending', PAID: 'paid', REFUNDED: 'refunded', CANCELED: 'canceled', EXPIRED: 'expired', FAILED: 'failed' };
   for (const [input, expected] of Object.entries(statuses)) {
     const gateway = new Firebot({ env: testEnv, store: new MemoryStore(), fetcher: async url => {
