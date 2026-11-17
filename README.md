@@ -1,6 +1,6 @@
 # Black Microderme
 
-Página de vendas baseada na referência fornecida, com oferta única de **R$ 297,00 à vista no Pix**, checkout próprio e confirmação de pagamento pela QuantumPay.
+Página de vendas com oferta única de **R$ 297,00 à vista no Pix**, checkout próprio e integração Firebot.
 
 ## Executar
 
@@ -13,66 +13,66 @@ pnpm test
 pnpm build
 ```
 
-No sandbox Windows que impede subprocessos do runner, use `node --test --test-isolation=none tests/checkout.test.mjs`.
+No sandbox Windows que impede subprocessos do runner:
+
+```sh
+node --test --test-isolation=none tests/checkout.test.mjs tests/firebot.test.mjs
+```
 
 ## Vercel
 
-- Projeto: `black-microderme`
-- Repositório: `ronald-almeida/Black-microderme`
-- Produção: branch `main`
+- Projeto: `black-microderme`; repositório: `ronald-almeida/Black-microderme`; produção: branch `main`.
 - Arquivos públicos: `public/`; função Node.js: `api/index.js`; região: São Paulo (`gru1`).
-- Blob **privado** `black-microderme-orders`, conectado a produção e preview por OIDC (`BLOB_STORE_ID`). Não usa dados de outros projetos.
+- Blob **privado** `black-microderme-orders`, conectado por OIDC (`BLOB_STORE_ID`).
+- Produção: https://black-microderme.vercel.app
 
-Configure **diretamente no painel da Vercel**, em Settings → Environment Variables, sem enviar segredos no chat ou no GitHub:
+Configure segredos diretamente no painel da Vercel, em Settings → Environment Variables → Production. Não envie chaves no chat nem no GitHub.
 
 | Variável | Uso |
 |---|---|
-| `QUANTUMPAY_API_KEY` | API Key da empresa que recebe o pagamento |
-| `QUANTUMPAY_API_SECRET` | API Secret da mesma empresa |
-| `CHECKOUT_SESSION_SECRET` | Opcional: segredo aleatório com pelo menos 32 caracteres. Na ausência, deriva uma chave da API Secret com HMAC. Alterá-la invalida as sessões existentes. |
-| `APP_URL` | Origem HTTPS pública do checkout; opcional quando página e API estão no mesmo domínio |
-| `QUANTUMPAY_WEBHOOK_SECRET` | `signatureSecret` retornado pelo cadastro do webhook; necessário apenas para receber eventos |
-| `QUANTUMPAY_POSTBACK_URL` | Opcional: URL HTTPS de postback já configurada e validada pela QuantumPay |
+| `FIREBOT_API_KEY` | Chave privada `fire_sk_live_...` da conta recebedora. Não usar a chave pública nem a de saque. |
+| `CHECKOUT_SESSION_SECRET` | Opcional: segredo estável com pelo menos 32 caracteres. Sem ele, a assinatura das sessões é derivada da chave privada Firebot. Rotacionar a chave derivadora invalida sessões e referências assinadas; reconciliar pedidos ativos antes dessa mudança. |
+| `APP_URL` | Origem HTTPS pública. Padrão: `https://black-microderme.vercel.app`. |
+| `FIREBOT_WEBHOOK_SECRET` | Opcional: chave secreta da configuração do webhook no painel Firebot. Não presumir que seja a chave da API. |
+| `BLOB_STORE_ID` | Identificador do armazenamento privado conectado à Vercel. |
+| `BLOB_READ_WRITE_TOKEN` | Alternativa ao OIDC para desenvolvimento; manter apenas em arquivo local ignorado pelo Git. |
 
-Depois de configurar as variáveis, faça **Redeploy**. O endpoint `/api/health` informa `paymentsConfigured`; ele não testa credenciais nem autoriza uma cobrança. Sem configuração, a página continua acessível, mas a geração de Pix fica indisponível, sem códigos ou aprovações fictícias.
+Mudanças nas variáveis exigem novo deploy. `/api/health` informa o provedor e se as variáveis necessárias existem; não valida as credenciais. Uma nova sessão em `/api/session` valida o acesso à Firebot e ao armazenamento sem criar cobrança. O resultado de autenticação fica em cache privado por cinco minutos, separado por chave.
 
-Uma nova sessão de checkout valida a autenticação na QuantumPay e o cache privado antes de liberar o formulário. Essa verificação não gera cobrança e não expõe tokens ao navegador.
+## Integração Firebot
 
-## Integração QuantumPay
+Documentação: https://firebotbr.com/integracoes/docs (requer login).
 
-1. `POST /api/auth`, Basic Auth com `apiKey:apiSecret`. Cache privado do token, usando `expiresIn` em **milissegundos**, com renovação antecipada e trava compartilhada.
-2. `POST /api/v1/pix/in/qrcode`: `amountInCents: 29700`, cliente validado, produto e referência interna. O navegador não escolhe o preço. Nome, e-mail, CPF válido e telefone com DDD são obrigatórios.
-3. O EMV retornado é a fonte do QR Code PNG e do Pix Copia e Cola. Não há chave Pix estática ou QR fictício em produção.
-4. Sessão HTTP-only assinada; pedidos privados com leitura consistente e escrita condicional (ETag). Submissões repetidas na mesma sessão reutilizam o pedido. O limite de geração é de cinco tentativas por IP em dez minutos. Cookies expiram em sete dias; registros técnicos em 90 dias. CPF, telefone e e-mail não são persistidos em texto aberto pelo site.
-5. Consulta autenticada `GET /api/v1/transactions/{id}`; exige ID correspondente, valor exato de 29700 e status reconhecido. Navegador consulta a cada dez segundos, servidor reaproveita verificações por quinze segundos e trata indisponibilidade/429. Não há redirecionamento por parâmetro de URL nem botão que marque o pedido como pago.
-6. `/obrigado` consulta o servidor novamente e só mostra confirmação para `paid`. Estados `expired`, `canceled` e `refunded` não são aprovação. Nova cobrança só pode substituir um Pix após confirmação de cancelamento/expiração.
-7. Timeout na criação tem resultado **incerto**: não repetimos a cobrança automaticamente, pois a documentação de PIX IN não estabelece uma garantia de idempotência do provedor. Nesse caso, conferir a referência na QuantumPay antes de qualquer ação manual. Fechar uma sessão e abrir outro navegador não garante deduplicação entre sessões.
+1. Autenticação: `GET https://firebotbr.com/api/v1/auth`, com `x-api-key` apenas no servidor.
+2. Criação: `POST /api/v1/pix/create`, com `amount: 297` em **reais**, `productType: DIGITAL`, descrição com referência interna, `storeUrl`, nome, e-mail, CPF e telefone com DDD obrigatórios. O servidor fixa o valor; o navegador não escolhe o preço.
+3. A resposta precisa trazer `transactionId`, `amount`, `status` e `pixCopiaECola`. O QR Code é gerado a partir do mesmo EMV exibido no botão Copia e Cola. Não há código pagável fictício em produção.
+4. Consulta: `GET /api/v1/pix/{transactionId}`, autenticada. Antes de aprovar, o servidor exige o mesmo identificador, valor exato de R$ 297 e status `PAID`. O navegador consulta a cada dez segundos; o servidor reaproveita resultados por quinze segundos.
+5. `/obrigado` consulta o servidor e só exibe a compra confirmada para pagamento aprovado. Estados de cancelamento, expiração, falha ou estorno não aprovam o pedido.
+6. Sessão HTTP-only assinada, pedidos privados, leituras consistentes e escritas condicionais por ETag. Submissões repetidas na mesma sessão reutilizam o pedido. Há limite de cinco tentativas por IP em dez minutos. Cookies duram sete dias; registros técnicos têm retenção de 90 dias. O site não persiste nome, CPF, telefone e e-mail em texto aberto.
+7. Timeout ou resposta ambígua ao criar um Pix deixa o pedido em estado **incerto**, sem nova tentativa automática. A documentação consultada não estabelece idempotência para a criação. Conferir a referência no painel Firebot antes de agir manualmente. A deduplicação não se estende a navegadores ou sessões diferentes.
 
-### Webhook e hospedagem Vercel
+### Webhook opcional
 
-Rota: `POST /api/webhooks/quantumpay`.
+Configure no painel Firebot a URL `https://black-microderme.vercel.app/api/webhooks/firebot` e salve o segredo correspondente em `FIREBOT_WEBHOOK_SECRET` na Vercel. Os eventos tratados são `venda.pendente`, `venda.paga` e `venda.estornada`.
 
-O guia detalhado exige `Quantum-Pay-Signature: t=<timestamp em ms>,v1=<HMAC SHA-256>`. A assinatura é calculada sobre `timestamp + '.' + corpo bruto`, com comparação em tempo constante e tolerância de cinco minutos. Eventos são deduplicados de forma persistente; o status também é consultado na API antes de atualizar o pedido. O resumo `llms.txt` cita outro formato de assinatura: **esta implementação segue o guia detalhado**, sem fallback inseguro.
+O cabeçalho `x-signature` deve conter o HMAC SHA-256 hexadecimal do corpo bruto. A comparação ocorre em tempo constante. O evento é deduplicado em armazenamento privado e a API de consulta confirma novamente ID, valor e status. Se o evento pago chegar antes da atualização da consulta, a rota retorna 503 para permitir nova entrega, sem marcar o evento como concluído.
 
-O guia exige mTLS e descreve uma alternativa `skip-mTLS` para hospedagem compartilhada. Vercel Functions não configura o handshake mTLS do domínio. Antes de habilitar postbacks, confirmar com a QuantumPay a modalidade suportada para sua conta e a emissão da assinatura dos postbacks. Pode ser necessário um proxy com mTLS. A confirmação pelo polling funciona independentemente do webhook, desde que a consulta de transações esteja habilitada na conta.
+O polling funciona sem webhook. O webhook permanece desabilitado enquanto o segredo não estiver configurado. A documentação consultada não exibe exemplo da resposta da consulta nem de um evento de venda; o adaptador exige os campos do contrato de criação e rejeita respostas incompatíveis. Esses retornos ainda precisam ser verificados com uma transação real da conta.
 
-Documentação consultada:
+### Migração da QuantumPay
 
-- [Autenticação](https://docs.quantumpay.com.br/pages/auth/generate-token)
-- [Criar Pix](https://docs.quantumpay.com.br/pages/pix-in/create-qrcode)
-- [Consulta de status no fluxo Pix](https://docs.quantumpay.com.br/pages/pix-in/overview)
-- [Assinatura e mTLS de webhooks](https://docs.quantumpay.com.br/webhook)
+O adaptador e a rota de webhook QuantumPay foram removidos. O código atual não usa `QUANTUMPAY_API_KEY` nem `QUANTUMPAY_API_SECRET`; essas variáveis podem ser excluídas da Vercel após a validação da Firebot.
+
+Pedidos Firebot usam cookie e prefixos próprios. Registros anteriores são preservados até o fim da retenção. Se um visitante ainda tiver o cookie de um pedido antigo não encerrado, o checkout orienta procurar o suporte para conferência, evitando gerar outro Pix automaticamente. A Firebot não consulta nem confirma transações da QuantumPay.
 
 ## Verificação
 
-Os testes cobrem valor fixo, autenticação, validação de CPF e telefone, concorrência, recuperação de pedido, assinatura e replay de webhook, status pendente/pago/expirado/estornado, sessão adulterada, divergência de valor/ID, indisponibilidade e criação de resultado incerto. A verificação de build confere arquivos e a remoção dos preços/checkout/rastreadores originais.
+Os 24 testes automatizados cobrem contrato de criação em reais, autenticação, validação dos dados, concorrência, recuperação do pedido, assinatura e repetição de webhook, confirmação de status, adulteração de sessão, divergências de valor/ID, indisponibilidade, resultado incerto e migração de pedidos antigos. O build confere arquivos públicos, referências de assets e importação do servidor.
 
-`node scripts/dev.mjs --demo` habilita apenas no servidor local um teste explicitamente identificado como **sem cobrança real**. Os dados e o QR de teste não são Pix pagáveis. O botão de simulação e as rotas `/_dev/*` não fazem parte dos arquivos públicos nem da função publicada.
+`node scripts/dev.mjs --demo` habilita um teste local identificado como **sem cobrança real**. O QR de teste não é pagável. Botões de simulação e rotas `/_dev/*` não são publicados.
 
-**Verificação em produção:** autenticação real da conta e acesso ao armazenamento privado validados; o checkout publicado libera a geração de Pix. Os 16 testes automatizados passaram. Permanecem pendentes a geração e o pagamento de uma cobrança real autorizada, o retorno exato da consulta dessa transação e o webhook da conta. Testes locais não comprovam liquidação bancária real.
+A autenticação real e a implantação devem ser verificadas após configurar a chave. Os testes automatizados não comprovam geração ou liquidação bancária real. A geração, o pagamento, a resposta da consulta e o webhook de uma cobrança real ainda dependem de validação na conta.
 
-## Conteúdo e entrega do curso
+## Entrega do curso
 
-Imagens, fontes e conteúdo da página de referência foram copiados para o repositório. Scripts de terceiros, pixels, WordPress e o checkout Hubla foram removidos. Todos os botões de compra abrem `/checkout`.
-
-O anexo de referência do checkout não estava disponível; o checkout foi construído conforme a descrição fornecida. A integração confirma o pagamento e abre a página de obrigado. Após a confirmação, o botão "Liberar meu acesso" abre o WhatsApp do suporte no número +55 (75) 98839-3742 com uma mensagem pronta. O suporte libera o acesso manualmente. Envio de e-mails, criação automática de usuário na área de membros, entrega de bônus e logística do kit não estão integrados. As afirmações da oferta original devem corresponder à entrega realizada pelo vendedor.
+Todos os botões de compra abrem `/checkout`. Após a confirmação do pagamento, a página de obrigado oferece **Liberar meu acesso**, que abre o WhatsApp do suporte **+55 (75) 98839-3742** com uma mensagem pronta. O suporte libera o acesso manualmente. Envio de e-mails, criação automática de usuário, entrega de bônus e logística do kit não estão integrados.
