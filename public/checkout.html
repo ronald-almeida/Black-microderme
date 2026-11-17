@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Checkout | Método Microderme</title><meta name="description" content="Garanta sua vaga no Método Microderme por R$ 297 à vista no Pix."><link rel="stylesheet" href="/checkout.css"><script src="/checkout.js" defer></script></head>
+<body>
+<header class="checkout-header"><div class="header-inner"><a href="/" aria-label="Voltar para a Black Microderme"><img class="brand" src="/assets/61608c93-pv-logo.svg" alt="Black Microderme"></a><span class="secure"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v11H6zM12 14v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Ambiente seguro</span></div></header>
+<main class="checkout-layout">
+<section class="checkout-main" aria-labelledby="checkout-title">
+<a class="back-link" href="/">← Voltar para a página do curso</a>
+<div class="eyebrow">SEU PRÓXIMO PASSO COMEÇA AQUI</div>
+<h1 id="checkout-title">Falta pouco para<br>garantir sua vaga.</h1>
+<p class="intro">Preencha seus dados e finalize sua inscrição com Pix.</p>
+<ol class="steps" aria-label="Etapas da compra"><li class="active" id="step-data" aria-current="step"><span>1</span> Seus dados</li><li id="step-pix"><span>2</span> Pagamento Pix</li><li id="step-done"><span>3</span> Confirmação</li></ol>
+<div id="availability" class="notice" role="status" hidden></div>
+<section id="details-section" class="form-card" aria-labelledby="data-title">
+<h2 id="data-title">Informações pessoais</h2><p class="muted">Use os dados de quem vai fazer o curso.</p>
+<form id="checkout-form" novalidate>
+<div class="field"><label for="name">Nome completo</label><input id="name" name="name" type="text" autocomplete="name" placeholder="Seu nome e sobrenome" required maxlength="150" aria-describedby="name-error"><small class="field-error" id="name-error"></small></div>
+<div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@exemplo.com" required maxlength="254" aria-describedby="email-error email-help"><small class="field-error" id="email-error"></small><small id="email-help">Confira seu e-mail para receber informações sobre sua compra.</small></div>
+<div class="field-row"><div class="field"><label for="document">CPF</label><input id="document" name="document" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" required maxlength="14" aria-describedby="document-error"><small class="field-error" id="document-error"></small></div><div class="field"><label for="phone">Telefone com DDD</label><input id="phone" name="phone" type="tel" autocomplete="tel-national" inputmode="tel" placeholder="(00) 00000-0000" required maxlength="16" aria-describedby="phone-error"><small class="field-error" id="phone-error"></small></div></div>
+<h2 class="payment-title">Forma de pagamento</h2><div class="payment-choice"><span class="pix-mark" aria-hidden="true">❖</span><span><strong>Pix</strong><small>Pagamento único. Sem parcelas.</small></span><span class="selected-check" aria-hidden="true">✓</span></div>
+<div class="form-total"><span>Total a pagar</span><strong>R$ 297,00</strong></div>
+<div id="form-error" class="notice error" role="alert" hidden></div>
+<button class="primary-button" id="generate-button" type="submit" disabled><span class="button-label">Gerar QR Code Pix</span><span aria-hidden="true">→</span></button>
+<p class="consent">Ao continuar, você concorda com as <a href="/privacidade#compra" target="_blank" rel="noopener">condições da compra</a> e com a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
+</form></section>
+<section id="pix-section" class="form-card pix-panel" aria-labelledby="pix-title" hidden tabindex="-1">
+<div class="pill"><span class="status-dot"></span>Aguardando pagamento</div><h2 id="pix-title">Agora é só pagar com Pix.</h2><p>Escaneie o QR Code com o aplicativo do seu banco.</p><strong class="pix-amount">R$ 297,00</strong>
+<div class="qr-frame"><img id="qr-code" width="256" height="256" alt="QR Code Pix de R$ 297 para o Método Microderme"></div><p id="expires" class="muted" hidden></p>
+<label for="pix-code">Ou use o Pix Copia e Cola</label><textarea id="pix-code" rows="2" readonly spellcheck="false"></textarea>
+<button id="copy-button" type="button" class="primary-button">Copiar código Pix <span aria-hidden="true">⧉</span></button><p id="copy-status" class="copy-status" role="status"></p>
+<ol class="pix-instructions"><li>Abra o aplicativo do seu banco e escolha <strong>Pix.</strong></li><li>Selecione <strong>QR Code</strong> ou <strong>Copia e Cola.</strong></li><li>Confira o valor de <strong>R$ 297,00</strong> e confirme o pagamento.</li></ol>
+<div class="waiting-note" role="status" id="payment-status">A confirmação é automática. Você será direcionada assim que o pagamento for confirmado.</div><button class="text-button" id="check-button" type="button">Já paguei · Verificar pagamento</button>
+</section>
+<section id="exception-section" class="form-card" hidden aria-live="polite"><h2 id="exception-title">Estamos verificando seu pedido</h2><p id="exception-message"></p><button id="retry-status" class="primary-button" type="button">Verificar novamente</button><button id="new-pix" class="text-button" type="button" hidden>Gerar um novo Pix</button></section>
+</section>
+<aside class="order-summary" aria-label="Resumo do pedido"><div class="product-art"><img src="/assets/9fb3450a-pv-cg01.avif" alt="Formação Método Microderme" width="520" height="340"></div><div class="summary-body"><span class="eyebrow">BLACK MICRODERME</span><h2>Método Microderme</h2><p class="author">com Thassia Piezzaroli</p><ul class="benefits"><li>Formação completa, do zero ao atendimento</li><li>1 ano de acesso às aulas</li><li>1 ano de suporte para suas dúvidas</li><li>Certificado de conclusão</li><li>Bônus da Black Microderme</li></ul><div class="summary-total"><div><span>Seu investimento</span><strong>R$ 297<span>,00</span></strong></div><span class="cash-tag">À vista no Pix</span></div><div class="guarantee"><span class="guarantee-icon" aria-hidden="true">7</span><div><strong>7 dias de garantia</strong><p>Conheça o método com tranquilidade.</p></div></div></div></aside>
+</main><footer class="checkout-footer"><span>Método Microderme · Thassia Piezzaroli</span><span>Pagamento processado pela QuantumPay</span></footer>
+</body></html>
+

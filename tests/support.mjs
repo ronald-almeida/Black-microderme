@@ -1,0 +1,8 @@
+export class MemoryStore {
+  constructor(){this.records=new Map();this.version=0;}
+  async read(key){const r=this.records.get(key);return r?structuredClone(r):null;}
+  async write(key,value,version=null){const old=this.records.get(key);if((!old&&version!==null)||(old&&old.version!==version))return null;const result={value:structuredClone(value),version:String(++this.version)};this.records.set(key,result);return structuredClone(result);}
+}
+export const customer={name:'Cliente de Teste',email:'teste@example.com',document:'52998224725',phone:'11987654321'};
+export const testEnv={QUANTUMPAY_API_KEY:'test-key',QUANTUMPAY_API_SECRET:'test-secret',CHECKOUT_SESSION_SECRET:'local-test-session-secret-with-at-least-32-characters',BLOB_STORE_ID:'test-store'};
+export function fakeGateway(){return {calls:0,paid:false,async token(){return 'local-test-token';},async create(){this.calls++;return {id:'trx_local_test',status:'pending',pix:{emv:'TESTE LOCAL SEM VALOR. NAO E UM PIX REAL.'}};},async status(id){return {id,status:this.paid?'paid':'pending',amount:29700};}};}
