@@ -36,6 +36,8 @@ Configure **diretamente no painel da Vercel**, em Settings → Environment Varia
 
 Depois de configurar as variáveis, faça **Redeploy**. O endpoint `/api/health` informa `paymentsConfigured`; ele não testa credenciais nem autoriza uma cobrança. Sem configuração, a página continua acessível, mas a geração de Pix fica indisponível, sem códigos ou aprovações fictícias.
 
+Uma nova sessão de checkout valida a autenticação na QuantumPay e o cache privado antes de liberar o formulário. Essa verificação não gera cobrança e não expõe tokens ao navegador.
+
 ## Integração QuantumPay
 
 1. `POST /api/auth`, Basic Auth com `apiKey:apiSecret`. Cache privado do token, usando `expiresIn` em **milissegundos**, com renovação antecipada e trava compartilhada.
