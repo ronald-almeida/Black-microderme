@@ -69,7 +69,7 @@ Os testes cobrem valor fixo, autenticação, validação de CPF e telefone, conc
 
 `node scripts/dev.mjs --demo` habilita apenas no servidor local um teste explicitamente identificado como **sem cobrança real**. Os dados e o QR de teste não são Pix pagáveis. O botão de simulação e as rotas `/_dev/*` não fazem parte dos arquivos públicos nem da função publicada.
 
-**Validação pendente em produção:** credenciais reais, autenticação da conta, geração e pagamento real autorizados, retorno exato da consulta de transações e webhook da conta. Testes locais não comprovam liquidação bancária real.
+**Verificação em produção:** autenticação real da conta e acesso ao armazenamento privado validados; o checkout publicado libera a geração de Pix. Os 16 testes automatizados passaram. Permanecem pendentes a geração e o pagamento de uma cobrança real autorizada, o retorno exato da consulta dessa transação e o webhook da conta. Testes locais não comprovam liquidação bancária real.
 
 ## Conteúdo e entrega do curso
 
