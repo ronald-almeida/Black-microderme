@@ -63,7 +63,7 @@ O polling funciona sem webhook. O webhook permanece desabilitado enquanto o segr
 
 O adaptador e a rota de webhook QuantumPay foram removidos. O código atual não usa `QUANTUMPAY_API_KEY` nem `QUANTUMPAY_API_SECRET`; essas variáveis podem ser excluídas da Vercel após a validação da Firebot.
 
-Pedidos Firebot usam cookie e prefixos próprios. Registros anteriores são preservados até o fim da retenção. Se um visitante ainda tiver o cookie de um pedido antigo não encerrado, o checkout orienta procurar o suporte para conferência, evitando gerar outro Pix automaticamente. A Firebot não consulta nem confirma transações da QuantumPay.
+Pedidos Firebot usam cookie e prefixos próprios. Cookies de pedidos antigos não bloqueiam a abertura do checkout Firebot. Registros anteriores são preservados até o fim da retenção; essa mudança não cancela cobranças antigas. A Firebot não consulta nem confirma transações da QuantumPay.
 
 ## Verificação
 

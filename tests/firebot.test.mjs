@@ -144,18 +144,23 @@ test('checkout independently rejects wrong transaction amount from a provider', 
   assert.equal((await f.request('/api/status')).status, 502);
 });
 
-test('old pending order blocks silent replacement; old visitor without order can continue', async () => {
+test('old provider cookie does not block Firebot checkout or alter previous orders', async () => {
   const store = new MemoryStore(), gateway = fakeGateway(), id = '11111111-1111-4111-8111-111111111111';
   const handle = createCheckout({ env: testEnv, store, gateway });
   const request = () => new Request(origin + '/api/session', { headers: { cookie: `microderme_checkout=${id}.123.legacy` } });
   const fresh = await handle(request());
   assert.equal(fresh.status, 200);
   assert.match(fresh.headers.get('set-cookie'), /^microderme_checkout_firebot=/);
-  await store.write(`orders/${id}`, { state: 'ready', status: 'pending', transactionId: 'old-provider-charge' });
-  const blocked = await handle(request());
-  assert.equal(blocked.status, 409);
-  assert.equal((await blocked.json()).error, 'previous_provider_order');
-  assert.equal(blocked.headers.get('set-cookie'), null);
+  const previous = { state: 'ready', status: 'pending', transactionId: 'old-provider-charge' };
+  await store.write(`orders/${id}`, previous);
+  const resumed = await handle(request());
+  assert.equal(resumed.status, 200);
+  assert.deepEqual(await resumed.json(), { ready: true });
+  const cookie = resumed.headers.get('set-cookie').split(';')[0];
+  assert.match(cookie, /^microderme_checkout_firebot=/);
+  const order = await handle(new Request(origin + '/api/pix', { headers: { cookie } }));
+  assert.deepEqual(await order.json(), { order: null });
+  assert.deepEqual((await store.read(`orders/${id}`)).value, previous);
   assert.equal(gateway.calls, 0);
 });
 
